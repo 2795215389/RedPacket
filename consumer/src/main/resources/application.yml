@@ -1,0 +1,19 @@
+server:
+  port: 8083
+spring:
+  dubbo:
+    application:
+      name: redPacket-consumer
+    registry:
+      protocol: zookeeper
+      address: 192.168.87.129:2181
+    protocol:
+      name: dubbo
+      port: 20880
+      host: localhost
+    scan: com.js.main.consumer
+logging:
+  level:
+    com: debug
+  file:
+    path: log\redpacket.log

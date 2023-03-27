@@ -34,7 +34,12 @@ public class RedPacketController {
     )
     IRedPacketService redPacketService;
 
-
+    /*
+    注意：特殊情况，前端参数不合法时，比如红包金额人数为0或者负数，
+    或者不够均分，2块钱10000人强，导致了单位比分还小。
+    这时需要一个参数校验，可以交给前端js做一个校验，
+    这样就不必要传入后端了，提高了性能
+     */
     @PostMapping(value = urlPrefix+"/hand/out",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public BaseResponse handOut(@Validated @RequestBody RedPacketDto dto, BindingResult result){
         if(result.hasErrors()){

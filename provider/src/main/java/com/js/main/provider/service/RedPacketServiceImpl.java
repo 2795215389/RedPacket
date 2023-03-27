@@ -86,10 +86,10 @@ public class RedPacketServiceImpl implements IRedPacketService {
     @Override
     public BigDecimal robLock(Integer userId, String redId) throws Exception {
         final String lockName = "redisLock" + redId + userId;
-        final String redRobKey = redId + ":rob";
+        final String redRobKey = redId +userId +":rob";
         final String redTotalKey = redId + ":total";
         ValueOperations valueOperations = redisTemplate.opsForValue();
-        //判断用户是否已经抢过红包，抢过直接返回即可
+        //判断用户是否已经抢过红包，抢过直接返回即可。本质是对userID加锁
         Object robValue = valueOperations.get(redRobKey);
         if (robValue != null) {
             return new BigDecimal(robValue.toString());
@@ -97,15 +97,20 @@ public class RedPacketServiceImpl implements IRedPacketService {
         //是否能抢红包，即红包有剩余
         if (click(redId)) {
             try {
+                //加锁
                 boolean lock=valueOperations.setIfAbsent(lockName,redId,24L,TimeUnit.HOURS);
                 if(lock){
                     Object value = redisTemplate.opsForList().rightPop(redId);
-                    BigDecimal money = new BigDecimal(value.toString());
+
                     if (value != null) {
+                        BigDecimal money = new BigDecimal(value.toString());
                         valueOperations.decrement(redTotalKey);
-                        valueOperations.setIfAbsent(redRobKey, value);
+                        //将记录写入缓存,单位是分
+                        valueOperations.set(redRobKey, value);
+                        //将记录写入mysql,单位是分
                         recordService.recordRobRedPacket(userId, redId, money);
                         log.info("当前用户抢到红包了:userId={} key={} 金额={}分", userId, redId, money);
+                        //单位是元
                         return money.divide(new BigDecimal(100));
                     }
                 }

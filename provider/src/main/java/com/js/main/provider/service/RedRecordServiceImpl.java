@@ -39,6 +39,7 @@ public class RedRecordServiceImpl implements IRedRecordService {
         redRecord.setAmount(new BigDecimal(dto.getMoney()));
         redRecordMapper.insertSelective(redRecord);
 
+        //写入每条抢红包的记录
         for(Integer i:redPackets){
             RedDetail redDetail=new RedDetail();
             redDetail.setRecordId(Integer.valueOf(redRecord.getId()));
